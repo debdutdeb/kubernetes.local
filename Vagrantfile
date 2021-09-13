@@ -45,7 +45,7 @@ apt update && \
   apt install -y kubelet kubeadm kubectl docker-ce && \
   apt-mark hold kubelet kubeadm kubectl && {
     test -d /etc/docker || mkdir /etc/docker
-    cat <<EOF | tee /etc/docker/daemon.json >/dev/null
+    cat >/etc/docker/daemon.json <<EOF
 {
   "exec-opts": ["native.cgroupdriver=systemd"],
   "log-driver": "json-file",
