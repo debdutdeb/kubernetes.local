@@ -1,2 +1,3 @@
 .vagrant/
 yamls/
+ssh.conf

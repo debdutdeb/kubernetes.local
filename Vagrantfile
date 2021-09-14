@@ -35,6 +35,7 @@ Vagrant.configure("2") do |config|
       node.vm.network "private_network", ip: IP_ADDRESSES[i]
 
       node.vm.provision "shell", inline: <<EOS
+set -x
 apt update && \
   apt install -y apt-transport-https ca-certificates curl && \
   curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg && \
@@ -55,6 +56,7 @@ apt update && \
   "storage-driver": "overlay2"
 }
 EOF
+    echo "KUBELET_EXTRA_ARGS=--node-ip #{IP_ADDRESSES[i]}" > /etc/default/kubelet
     systemctl restart docker
     usermod -aG docker vagrant
   }
