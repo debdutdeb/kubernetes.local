@@ -14,6 +14,7 @@ init_cluster() {
     _ssh $master 'mkdir -p $HOME/.kube'
     _ssh $master 'sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config'
     _ssh $master 'sudo chown $(id -u):$(id -g) $HOME/.kube/config'
+    _ssh $master 'kubectl apply -f https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d \n)'
 }
 
 get_hash() {
