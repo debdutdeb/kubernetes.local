@@ -1,34 +1,31 @@
 #! /bin/bash
 
 _ssh() {
-    local host=$1
-    shift
-    ssh -F ssh.conf $host sh -xc \"$*\"
+    ssh -F ssh.conf $1 sh -xc \'$2\'
 }
 
 init_cluster() {
-    # only have one control place atm
+    # only have one control plane atm
     local master=${!master_nodes[@]}
     _ssh $master \
-        sudo kubeadm init --apiserver-advertise-address=${master_nodes[$master]} --pod-network-cidr=192.168.31.0/24
+        "sudo kubeadm init --apiserver-advertise-address=${master_nodes[$master]} --pod-network-cidr=192.168.31.0/24"
     _ssh $master 'mkdir -p $HOME/.kube'
     _ssh $master 'sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config'
     _ssh $master 'sudo chown $(id -u):$(id -g) $HOME/.kube/config'
-    _ssh $master 'kubectl apply -f https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d \n)'
+    _ssh $master 'kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 -w0)"'
 }
 
 get_hash() {
     _ssh ${!master_nodes[@]} \
-        "openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt 
+        'openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt 
         | openssl rsa -pubin -outform der 2>/dev/null 
         | openssl dgst -sha256 -hex 
-        | sed 's/^.* //'"
+        | sed "s/^.* //"'
 }
 
 get_token() {
     _ssh ${!master_nodes[@]} \
-        kubeadm token list -o json \
-            | jq -r .token
+        'kubeadm token list -o json' | jq -r .token
 }
 
 declare -A master_nodes=([node0]=10.0.0.2)
@@ -46,10 +43,10 @@ main() {
 
     for node in ${!worker_nodes[@]}; do
         _ssh $node \
-            sudo kubeadm join \
+            "sudo kubeadm join \
                 ${master_nodes[@]}:6443 \
                 --token=$token \
-                --discovery-token-ca-cert-hash=sha256:$hash
+                --discovery-token-ca-cert-hash=sha256:$hash"
     done
 }
 
