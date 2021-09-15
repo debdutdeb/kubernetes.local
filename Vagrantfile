@@ -7,7 +7,7 @@ IP_ADDRESSES = [
   "10.0.0.3",
 ]
 
-BOX = "ubuntu/focal64"
+BOX = "generic/ubuntu1804"
 
 HOSTNAMES = [
   "node0",
@@ -21,21 +21,24 @@ Vagrant.configure("2") do |config|
   
   NODES.times do |i|
 
+    config.vm.boot_timeout = 3600
+
     config.vm.define "node" + i.to_s() do |node|
 
       node.vm.box = BOX
       node.vm.hostname = HOSTNAMES[i]
 
-      node.vm.provider :virtualbox do |vm|
+      node.vm.provider :libvirtd do |vm|
         vm.memory = 2048
         vm.cpus = 2
-        vm.customize ["modifyvm", :id, "--cpuexecutioncap", "50"]
       end
 
       node.vm.network "private_network", ip: IP_ADDRESSES[i]
 
       node.vm.provision "shell", inline: <<EOS
 set -x
+# need to disable swap for kubeadm to work
+swapoff -a
 apt update && \
   apt install -y apt-transport-https ca-certificates curl && \
   curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg && \
