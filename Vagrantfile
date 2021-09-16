@@ -33,12 +33,15 @@ Vagrant.configure("2") do |config|
         vm.cpus = 2
       end
 
+      node.vm.synced_folder "./yamls", "/home/vagrant/yamls"
+
       node.vm.network "private_network", ip: IP_ADDRESSES[i]
 
       node.vm.provision "shell", inline: <<EOS
 set -x
 # need to disable swap for kubeadm to work
 swapoff -a
+sed -i "s@$(grep -E ^UUID=.+swap  /etc/fstab)@@" /etc/fstab
 apt update && \
   apt install -y apt-transport-https ca-certificates curl && \
   curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg && \
